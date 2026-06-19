@@ -1,0 +1,53 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:rahiq_driver/data/storage/auth_storage.dart';
+import 'package:rahiq_driver/utils/colors.dart';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:rahiq_driver/services/notification_service.dart';
+// import 'firebase_options.dart'; // Uncomment after running flutterfire configure
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthStorage.init();
+  
+  try {
+    await Firebase.initializeApp(
+      // options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await Permission.notification.request();
+    await NotificationService().init();
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+  }
+  
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Rahiq Driver',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.buttonBlue),
+        useMaterial3: true,
+      ),
+      localizationsDelegates: const [
+        // AppLocalizations.delegate, // Add when generated
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+      ],
+      home: const Scaffold(body: Center(child: Text('Rahiq Driver Initialization'))), // placeholder
+    );
+  }
+}
