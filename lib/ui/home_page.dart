@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:rahiq_driver/ui/auto_orders_page.dart';
+import 'package:rahiq_driver/ui/dashboard/dashboard_tab.dart';
 import 'package:rahiq_driver/ui/orders/orders_page.dart';
 import 'package:rahiq_driver/ui/profile/profile_tab.dart';
 import 'package:rahiq_driver/ui/shared/custom_bottom_nav.dart';
-
+import 'package:rahiq_driver/l10n/app_localizations.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -14,15 +15,23 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const Center(child: Text('Dashboard')), // Placeholder for Dashboard
-    const OrdersPage(),
-    const AutoOrdersPage(),
-    const ProfileTab(),
-  ];
+  late List<Widget> _pages;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context)!;
+    _pages = [
+      const DashboardTab(),
+      const OrdersPage(),
+      const AutoOrdersPage(),
+      const ProfileTab(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       extendBody: true, // Allows body to extend behind the floating nav bar
       body: _pages[_currentIndex],
@@ -34,10 +43,10 @@ class _HomePageState extends State<HomePage> {
           });
         },
         items: [
-          CustomBottomNavItem(icon: Icons.dashboard, label: 'Home'),
-          CustomBottomNavItem(icon: Icons.list_alt, label: 'Orders'),
-          CustomBottomNavItem(icon: Icons.autorenew, label: 'Autodelivery'),
-          CustomBottomNavItem(icon: Icons.person, label: 'Profile'),
+          CustomBottomNavItem(icon: Icons.dashboard, label: l10n.home),
+          CustomBottomNavItem(icon: Icons.list_alt, label: l10n.orders),
+          CustomBottomNavItem(icon: Icons.autorenew, label: l10n.autodelivery),
+          CustomBottomNavItem(icon: Icons.person, label: l10n.profile),
         ],
       ),
     );

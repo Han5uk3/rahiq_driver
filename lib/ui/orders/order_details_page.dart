@@ -4,6 +4,7 @@ import 'package:rahiq_driver/data/api/driver/driver_orders_api.dart';
 import 'package:rahiq_driver/data/models/driver/driver_order.dart';
 import 'package:rahiq_driver/ui/shared/proof_submission_page.dart';
 import 'package:rahiq_driver/utils/colors.dart';
+import 'package:rahiq_driver/l10n/app_localizations.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final DriverOrder order;
@@ -48,7 +49,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Order #${widget.order.id.split('-').first.toUpperCase()}'),
+        title: Text(AppLocalizations.of(context)!.orderNumber(widget.order.id.split('-').first.toUpperCase())),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -91,7 +92,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                           });
                         },
                         icon: const Icon(Icons.upload_file),
-                        label: Text(_selectedSubOrders.length == 1 ? 'Complete order' : 'Complete selected orders'),
+                        label: Text(_selectedSubOrders.length == 1 ? AppLocalizations.of(context)!.completeOrder : AppLocalizations.of(context)!.completeSelectedOrders),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.buttonBlue,
                           foregroundColor: Colors.white,
@@ -116,24 +117,24 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Customer Details',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.buttonBlue),
+            Text(
+              AppLocalizations.of(context)!.customerDetails,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.buttonBlue),
             ),
             const Divider(),
-            _buildDetailRow(Icons.person, 'Name', widget.order.customerName ?? 'N/A'),
-            _buildDetailRow(Icons.phone, 'Phone', widget.order.customerPhone ?? 'N/A'),
-            _buildDetailRow(Icons.location_on, 'Address', widget.order.deliveryAddress ?? 'N/A'),
+            _buildDetailRow(Icons.person, AppLocalizations.of(context)!.nameLabel, widget.order.customerName ?? 'N/A'),
+            _buildDetailRow(Icons.phone, AppLocalizations.of(context)!.phoneLabel, widget.order.customerPhone ?? 'N/A'),
+            _buildDetailRow(Icons.location_on, AppLocalizations.of(context)!.addressLabel, widget.order.deliveryAddress ?? 'N/A'),
             const SizedBox(height: 16),
-            const Text(
-              'Order Info',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.buttonBlue),
+            Text(
+              AppLocalizations.of(context)!.orderInfo,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.buttonBlue),
             ),
             const Divider(),
-            _buildDetailRow(Icons.info, 'Status', widget.order.status ?? 'N/A'),
-            _buildDetailRow(Icons.payment, 'Payment', widget.order.paymentMethod ?? 'N/A'),
+            _buildDetailRow(Icons.info, AppLocalizations.of(context)!.status, widget.order.status ?? 'N/A'),
+            _buildDetailRow(Icons.payment, AppLocalizations.of(context)!.paymentLabel, widget.order.paymentMethod ?? 'N/A'),
             if (widget.order.totalAmount != null)
-              _buildDetailRow(Icons.monetization_on, 'Total', '\$${widget.order.totalAmount}'),
+              _buildDetailRow(Icons.monetization_on, AppLocalizations.of(context)!.totalLabel, '\$${widget.order.totalAmount}'),
           ],
         ),
       ),
@@ -152,9 +153,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Sub Orders',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.buttonBlue),
+                Text(
+                  AppLocalizations.of(context)!.subOrdersLabel,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.buttonBlue),
                 ),
                 if (_isMultiSelectMode)
                   TextButton(
@@ -164,7 +165,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         _selectedSubOrders.clear();
                       });
                     },
-                    child: const Text('Cancel'),
+                    child: Text(AppLocalizations.of(context)!.cancel),
                   ),
               ],
             ),

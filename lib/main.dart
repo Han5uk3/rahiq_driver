@@ -9,9 +9,18 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:rahiq_driver/services/notification_service.dart';
 // import 'firebase_options.dart'; // Uncomment after running flutterfire configure
 
+import 'package:intl/date_symbol_data_local.dart';
+
+late ValueNotifier<Locale> localeNotifier;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AuthStorage.init();
+  await initializeDateFormatting();
+  
+  // Load saved language or default to English
+  final savedLanguage = AuthStorage.getLanguage();
+  localeNotifier = ValueNotifier(Locale(savedLanguage));
   
   try {
     await Firebase.initializeApp(
@@ -39,9 +48,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Rahiq Driver',
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<Locale>(
+      valueListenable: localeNotifier,
+      builder: (context, locale, child) {
+        return MaterialApp(
+          title: 'Rahiq Driver',
+          locale: locale,
+          debugShowCheckedModeBanner: false,
       scrollBehavior: const MyScrollBehavior(),
       theme: ThemeData(
         appBarTheme: const AppBarTheme(
@@ -59,9 +72,11 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: const [
         Locale('en'),
-        Locale('ar'),
-      ],
-      home: const SplashPage(),
+          Locale('ar'),
+        ],
+        home: const SplashPage(),
+      );
+      },
     );
   }
 }

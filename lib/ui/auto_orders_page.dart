@@ -3,6 +3,7 @@ import 'package:rahiq_driver/data/api/api_client.dart';
 import 'package:rahiq_driver/data/api/driver/driver_auto_deliveries_api.dart';
 import 'package:rahiq_driver/data/models/driver/driver_auto_delivery.dart';
 import 'package:rahiq_driver/utils/colors.dart';
+import 'package:rahiq_driver/l10n/app_localizations.dart';
 
 class AutoOrdersPage extends StatefulWidget {
   const AutoOrdersPage({super.key});
@@ -20,15 +21,22 @@ class _AutoOrdersPageState extends State<AutoOrdersPage>
   bool _isLoading = true;
   String? _error;
 
-  static const _tabs = [
-    _TabDef('Pending', ['PENDING', 'ASSIGNED', 'IN_TRANSIT', 'ACCEPTED']),
-    _TabDef('Delivered', ['DELIVERED', 'COMPLETED']),
-  ];
+  late List<_TabDef> _tabs;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context)!;
+    _tabs = [
+      _TabDef(l10n.pending, ['PENDING', 'ASSIGNED', 'IN_TRANSIT', 'ACCEPTED']),
+      _TabDef(l10n.delivered, ['DELIVERED', 'COMPLETED']),
+    ];
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _deliveriesApi = DriverAutoDeliveriesApi(ApiClient());
     _fetchItems();
   }
@@ -77,24 +85,24 @@ class _AutoOrdersPageState extends State<AutoOrdersPage>
             color: AppColors.buttonBlueDark,
             child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(16, 60, 16, 12),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 60, 16, 12),
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Autodelivery',
-                          style: TextStyle(
+                          AppLocalizations.of(context)!.autodelivery,
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'View and manage your auto-assigned batches',
-                          style: TextStyle(
+                          AppLocalizations.of(context)!.viewAndManageAssignedOrders,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                             color: Colors.white70,
@@ -235,7 +243,7 @@ class _AutoOrdersPageState extends State<AutoOrdersPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.customerName ?? 'Unknown Customer',
+                      item.customerName ?? AppLocalizations.of(context)!.unknownCustomer,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -317,7 +325,7 @@ class _AutoOrdersPageState extends State<AutoOrdersPage>
           ),
           const SizedBox(height: 16),
           Text(
-            'No $tabLabel batches',
+            AppLocalizations.of(context)!.noOrders(tabLabel),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -347,7 +355,7 @@ class _AutoOrdersPageState extends State<AutoOrdersPage>
             ),
             const SizedBox(height: 16),
             Text(
-              _error ?? 'Something went wrong',
+              _error ?? AppLocalizations.of(context)!.somethingWentWrong,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: Colors.black54),
             ),
@@ -362,7 +370,7 @@ class _AutoOrdersPageState extends State<AutoOrdersPage>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               ),
-              child: const Text('Try Again'),
+              child: Text(AppLocalizations.of(context)!.tryAgain),
             ),
           ],
         ),

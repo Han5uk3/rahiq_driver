@@ -7,6 +7,7 @@ import 'package:rahiq_driver/data/api/driver/driver_auth_api.dart';
 import 'package:rahiq_driver/data/storage/auth_storage.dart';
 import 'package:rahiq_driver/ui/home_page.dart';
 import 'package:rahiq_driver/utils/colors.dart';
+import 'package:rahiq_driver/l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -66,6 +67,10 @@ class _LoginPageState extends State<LoginPage> {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       );
+      
+      if (response.driver != null) {
+        await AuthStorage.saveUserData(response.driver!.toJson());
+      }
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -103,9 +108,9 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: AppColors.buttonBlueDark,
         shape: Border.all(width: 0, color: AppColors.buttonBlueDark),
         centerTitle: true,
-        title: const Text(
-          "Login",
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.login,
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
             color: Colors.white,
@@ -218,7 +223,9 @@ class _LoginPageState extends State<LoginPage> {
                                                   topRight: Radius.circular(30),
                                                 ),
                                             inputDecoration: InputDecoration(
-                                              hintText: 'Search',
+                                              hintText: AppLocalizations.of(
+                                                context,
+                                              )!.search,
                                               prefixIcon: const Icon(
                                                 Icons.search,
                                               ),
@@ -294,9 +301,11 @@ class _LoginPageState extends State<LoginPage> {
                                     inputFormatters: [
                                       FilteringTextInputFormatter.digitsOnly,
                                     ],
-                                    decoration: const InputDecoration(
-                                      hintText: 'Enter phone number',
-                                      hintStyle: TextStyle(
+                                    decoration: InputDecoration(
+                                      hintText: AppLocalizations.of(
+                                        context,
+                                      )!.enterPhoneNumber,
+                                      hintStyle: const TextStyle(
                                         color: Colors.grey,
                                         fontSize: 14,
                                       ),
@@ -305,7 +314,9 @@ class _LoginPageState extends State<LoginPage> {
                                     style: const TextStyle(fontSize: 14),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Required';
+                                        return AppLocalizations.of(
+                                          context,
+                                        )!.requiredField;
                                       }
                                       return null;
                                     },
@@ -351,9 +362,11 @@ class _LoginPageState extends State<LoginPage> {
                                   child: TextFormField(
                                     controller: _passwordController,
                                     obscureText: _obscurePassword,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Enter password',
-                                      hintStyle: TextStyle(
+                                    decoration: InputDecoration(
+                                      hintText: AppLocalizations.of(
+                                        context,
+                                      )!.enterPassword,
+                                      hintStyle: const TextStyle(
                                         color: Colors.grey,
                                         fontSize: 14,
                                       ),
@@ -362,7 +375,9 @@ class _LoginPageState extends State<LoginPage> {
                                     style: const TextStyle(fontSize: 14),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Required';
+                                        return AppLocalizations.of(
+                                          context,
+                                        )!.requiredField;
                                       }
                                       return null;
                                     },
@@ -413,9 +428,9 @@ class _LoginPageState extends State<LoginPage> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Text(
-                                      'Login',
-                                      style: TextStyle(
+                                  : Text(
+                                      AppLocalizations.of(context)!.login,
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),

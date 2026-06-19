@@ -4,6 +4,7 @@ import 'package:rahiq_driver/data/api/driver/driver_orders_api.dart';
 import 'package:rahiq_driver/data/models/driver/auto_order_item.dart';
 import 'package:rahiq_driver/ui/shared/proof_submission_page.dart';
 import 'package:rahiq_driver/utils/colors.dart';
+import 'package:rahiq_driver/l10n/app_localizations.dart';
 
 class AutoOrderDetailsPage extends StatefulWidget {
   final AutoOrderItem item;
@@ -65,6 +66,7 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                   color: AppColors.buttonBlueDark,
                   padding: const EdgeInsetsDirectional.fromSTEB(16, 60, 16, 20),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
@@ -81,32 +83,14 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.item.name,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            if (widget.item.nameAr.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                widget.item.nameAr,
-                                textDirection: TextDirection.rtl,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ],
+                      SizedBox(width: 8),
+                      Text(
+                        widget.item.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(width: 38),
@@ -196,7 +180,13 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                                         size: 20,
                                       ),
                                       label: Text(
-                                        _selectedSubOrders.length == 1 ? 'Complete order' : 'Complete selected orders',
+                                        _selectedSubOrders.length == 1
+                                            ? AppLocalizations.of(
+                                                context,
+                                              )!.completeOrder
+                                            : AppLocalizations.of(
+                                                context,
+                                              )!.completeSelectedOrders,
                                         style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
@@ -309,7 +299,7 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${_subOrders.length} Sub-Orders',
+                      '${_subOrders.length} ${AppLocalizations.of(context)!.subOrdersLabel}',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -363,9 +353,9 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Customer Details',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.customerDetails,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: Colors.black87,
@@ -452,11 +442,11 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 8, bottom: 12),
           child: Text(
-            'Batch Deliveries',
-            style: TextStyle(
+            AppLocalizations.of(context)!.batchDeliveries,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: Colors.black87,
@@ -526,7 +516,11 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sub-order #${subOrder['subOrderNumber'] ?? subOrder['id']?.toString().substring(0, 8)}',
+                          AppLocalizations.of(context)!.subOrderNumber(
+                            subOrder['subOrderNumber']?.toString() ??
+                                subOrder['id']?.toString().substring(0, 8) ??
+                                '',
+                          ),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: AppColors.buttonBlueDark,
@@ -549,7 +543,9 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Notes: ${subOrder['deliveryNotes']}',
+                                    AppLocalizations.of(context)!.notes(
+                                      subOrder['deliveryNotes'].toString(),
+                                    ),
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontStyle: FontStyle.italic,
@@ -572,7 +568,9 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Assigned: ${_formatDate(subOrder['assignedDate'])}',
+                                  AppLocalizations.of(context)!.assigned(
+                                    _formatDate(subOrder['assignedDate']),
+                                  ),
                                   style: const TextStyle(
                                     fontSize: 13,
                                     color: Colors.black54,
@@ -623,7 +621,8 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    product['name'] ?? 'Product',
+                                    product['name'] ??
+                                        AppLocalizations.of(context)!.product,
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -632,7 +631,9 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'Qty: ${subOrder['quantity'] ?? 1}',
+                                    AppLocalizations.of(context)!.qty(
+                                      subOrder['quantity']?.toString() ?? '1',
+                                    ),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,

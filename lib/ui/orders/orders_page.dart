@@ -6,6 +6,7 @@ import 'package:rahiq_driver/data/api/driver/driver_orders_api.dart';
 import 'package:rahiq_driver/ui/orders/order_details_page.dart';
 import 'package:rahiq_driver/ui/auto_orders/auto_order_details_page.dart';
 import 'package:rahiq_driver/utils/colors.dart';
+import 'package:rahiq_driver/l10n/app_localizations.dart';
 
 class OrderListItem {
   final String id;
@@ -47,15 +48,19 @@ class _OrdersPageState extends State<OrdersPage>
   bool _isLoading = true;
   String? _error;
 
-  static const _tabs = [
-    _TabDef('Normal orders', []),
-    _TabDef('Auto orders', []),
-  ];
+  late List<_TabDef> _tabs;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context)!;
+    _tabs = [_TabDef(l10n.normalOrders, []), _TabDef(l10n.autoOrders, [])];
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _ordersApi = DriverOrdersApi(ApiClient());
     _fetchOrders();
   }
@@ -82,7 +87,9 @@ class _OrdersPageState extends State<OrdersPage>
           OrderListItem(
             id: order.id,
             title: order.customerName ?? 'Unknown Customer',
-            subtitle: 'Order #${order.id.split('-').first.toUpperCase()}',
+            subtitle: AppLocalizations.of(
+              context,
+            )!.orderNumber(order.id.split('-').first.toUpperCase()),
             address: order.deliveryAddress,
             status: order.status ?? 'PENDING',
             createdAt: order.createdAt,
@@ -98,7 +105,7 @@ class _OrdersPageState extends State<OrdersPage>
           OrderListItem(
             id: auto.id,
             title: auto.name,
-            subtitle: 'Auto Order #${auto.id}',
+            subtitle: AppLocalizations.of(context)!.autoOrderNumber(auto.id),
             address: '${auto.totalQuantity} packages',
             status:
                 'PENDING', // Default to pending so it appears in the Assigned tab
@@ -149,24 +156,26 @@ class _OrdersPageState extends State<OrdersPage>
             color: AppColors.buttonBlueDark,
             child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(16, 60, 16, 12),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 60, 16, 12),
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Orders',
-                          style: TextStyle(
+                          AppLocalizations.of(context)!.orders,
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'View and manage your assigned orders',
-                          style: TextStyle(
+                          AppLocalizations.of(
+                            context,
+                          )!.viewAndManageAssignedOrders,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                             color: Colors.white70,
@@ -453,7 +462,7 @@ class _OrdersPageState extends State<OrdersPage>
           ),
           const SizedBox(height: 16),
           Text(
-            'No $tabLabel orders',
+            AppLocalizations.of(context)!.noOrders(tabLabel),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -486,7 +495,7 @@ class _OrdersPageState extends State<OrdersPage>
             ),
             const SizedBox(height: 16),
             Text(
-              _error ?? 'Something went wrong',
+              _error ?? AppLocalizations.of(context)!.somethingWentWrong,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: Colors.black54),
             ),
@@ -504,7 +513,7 @@ class _OrdersPageState extends State<OrdersPage>
                   vertical: 14,
                 ),
               ),
-              child: const Text('Try Again'),
+              child: Text(AppLocalizations.of(context)!.tryAgain),
             ),
           ],
         ),

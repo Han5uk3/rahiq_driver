@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
+import 'package:rahiq_driver/l10n/app_localizations.dart';
 import 'package:rahiq_driver/data/api/api_client.dart';
 import 'package:rahiq_driver/data/api/driver/driver_auth_api.dart';
 import 'package:rahiq_driver/data/models/driver/driver_profile.dart';
+import 'package:rahiq_driver/data/storage/auth_storage.dart';
 import 'package:rahiq_driver/utils/colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -25,21 +28,38 @@ class _MyAccountPageState extends State<MyAccountPage> {
 
   Future<void> _fetchProfile() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
+      final cachedData = AuthStorage.getUserData();
+      if (cachedData != null) {
+        setState(() {
+          _profile = DriverProfile.fromJson(
+            Map<String, dynamic>.from(cachedData),
+          );
+          _isLoading = false;
+          _error = null;
+        });
+      } else {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+      }
       final api = DriverAuthApi(ApiClient());
       final profile = await api.getProfile();
+
+      await AuthStorage.saveUserData(profile.toJson());
+
       setState(() {
         _profile = profile;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      // Only show error if we don't have cached data
+      if (_profile == null) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -82,12 +102,12 @@ class _MyAccountPageState extends State<MyAccountPage> {
                             ),
                           ),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'My Account',
+                                AppLocalizations.of(context)!.myAccount,
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
@@ -96,7 +116,9 @@ class _MyAccountPageState extends State<MyAccountPage> {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Your personal information',
+                                AppLocalizations.of(
+                                  context,
+                                )!.yourPersonalInformation,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
@@ -164,12 +186,12 @@ class _MyAccountPageState extends State<MyAccountPage> {
                     ),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'My Account',
+                        AppLocalizations.of(context)!.myAccount,
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -178,7 +200,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Your personal information',
+                        AppLocalizations.of(context)!.yourPersonalInformation,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
@@ -239,28 +261,28 @@ class _MyAccountPageState extends State<MyAccountPage> {
 
           // ── Personal info card ───────────────────────────────────────
           _buildInfoCard(
-            title: 'Personal Information',
+            title: AppLocalizations.of(context)!.personalInformation,
             icon: Icons.person_outline_rounded,
             fields: [
               _FieldData(
-                label: 'First Name',
+                label: AppLocalizations.of(context)!.firstName,
                 value: p.firstName,
                 icon: Icons.badge_outlined,
               ),
               _FieldData(
-                label: 'Last Name',
+                label: AppLocalizations.of(context)!.lastName,
                 value: p.lastName,
                 icon: Icons.badge_outlined,
               ),
               if (p.email != null && p.email!.isNotEmpty)
                 _FieldData(
-                  label: 'Email',
+                  label: AppLocalizations.of(context)!.email,
                   value: p.email!,
                   icon: Icons.mail_outline_rounded,
                 ),
               if (p.gender != null && p.gender!.isNotEmpty)
                 _FieldData(
-                  label: 'Gender',
+                  label: AppLocalizations.of(context)!.gender,
                   value: _capitalize(p.gender!),
                   icon: Icons.wc_rounded,
                 ),
@@ -271,13 +293,14 @@ class _MyAccountPageState extends State<MyAccountPage> {
 
           // ── Contact card ─────────────────────────────────────────────
           _buildInfoCard(
-            title: 'Contact Details',
+            title: AppLocalizations.of(context)!.contactDetails,
             icon: Icons.phone_outlined,
             fields: [
               _FieldData(
-                label: 'Phone Number',
+                label: AppLocalizations.of(context)!.phoneNumber,
                 value: '${p.countryCode} ${p.phoneNumber}',
                 icon: Icons.phone_rounded,
+                forceLtr: true,
               ),
             ],
           ),
@@ -286,12 +309,14 @@ class _MyAccountPageState extends State<MyAccountPage> {
 
           // ── Account details card ──────────────────────────────────────
           _buildInfoCard(
-            title: 'Account Details',
+            title: AppLocalizations.of(context)!.accountDetails,
             icon: Icons.manage_accounts_outlined,
             fields: [
               _FieldData(
-                label: 'Status',
-                value: (p.isActive ?? false) ? 'Active' : 'Inactive',
+                label: AppLocalizations.of(context)!.status,
+                value: (p.isActive ?? false)
+                    ? AppLocalizations.of(context)!.active
+                    : AppLocalizations.of(context)!.inactive,
                 icon: Icons.circle,
                 valueColor: (p.isActive ?? false)
                     ? Colors.green
@@ -299,15 +324,9 @@ class _MyAccountPageState extends State<MyAccountPage> {
               ),
               if (p.type != null && p.type!.isNotEmpty)
                 _FieldData(
-                  label: 'Driver Type',
+                  label: AppLocalizations.of(context)!.driverType,
                   value: _capitalize(p.type!),
                   icon: Icons.local_shipping_rounded,
-                ),
-              if (p.vehicleId != null && p.vehicleId!.isNotEmpty)
-                _FieldData(
-                  label: 'Vehicle ID',
-                  value: p.vehicleId!,
-                  icon: Icons.directions_car_rounded,
                 ),
             ],
           ),
@@ -315,17 +334,17 @@ class _MyAccountPageState extends State<MyAccountPage> {
           if (p.createdAt != null) ...[
             const SizedBox(height: 16),
             _buildInfoCard(
-              title: 'Account History',
+              title: AppLocalizations.of(context)!.accountHistory,
               icon: Icons.history_rounded,
               fields: [
                 _FieldData(
-                  label: 'Member Since',
+                  label: AppLocalizations.of(context)!.memberSince,
                   value: _formatDate(p.createdAt!),
                   icon: Icons.calendar_today_rounded,
                 ),
                 if (p.updatedAt != null)
                   _FieldData(
-                    label: 'Last Updated',
+                    label: AppLocalizations.of(context)!.lastUpdated,
                     value: _formatDate(p.updatedAt!),
                     icon: Icons.update_rounded,
                   ),
@@ -375,8 +394,8 @@ class _MyAccountPageState extends State<MyAccountPage> {
           const SizedBox(height: 28),
 
           // ── Heading ──────────────────────────────────────────────────
-          const Text(
-            'Account Blocked',
+          Text(
+            AppLocalizations.of(context)!.accountBlocked,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -407,8 +426,8 @@ class _MyAccountPageState extends State<MyAccountPage> {
           const SizedBox(height: 20),
 
           // ── Description ───────────────────────────────────────────────
-          const Text(
-            'Your account has been temporarily suspended.\nPlease contact our support team to resolve this issue and restore your access.',
+          Text(
+            AppLocalizations.of(context)!.accountSuspendedMessage,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, height: 1.6, color: Colors.black45),
           ),
@@ -419,10 +438,10 @@ class _MyAccountPageState extends State<MyAccountPage> {
           Row(
             children: [
               Expanded(child: Divider(color: Colors.grey.shade200)),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
-                  'Need help?',
+                  AppLocalizations.of(context)!.needHelp,
                   style: TextStyle(fontSize: 12, color: Colors.black38),
                 ),
               ),
@@ -438,8 +457,8 @@ class _MyAccountPageState extends State<MyAccountPage> {
             child: ElevatedButton.icon(
               onPressed: _contactSupport,
               icon: const Icon(Icons.support_agent_rounded, size: 20),
-              label: const Text(
-                'Contact Our Team',
+              label: Text(
+                AppLocalizations.of(context)!.contactOurTeam,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
               style: ElevatedButton.styleFrom(
@@ -468,8 +487,8 @@ class _MyAccountPageState extends State<MyAccountPage> {
                   side: BorderSide(color: Colors.grey.shade300),
                 ),
               ),
-              child: const Text(
-                'Go Back',
+              child: Text(
+                AppLocalizations.of(context)!.goBack,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -504,24 +523,24 @@ class _MyAccountPageState extends State<MyAccountPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            title: const Row(
+            title: Row(
               children: [
                 Icon(
                   Icons.support_agent_rounded,
                   color: AppColors.buttonBlueDark,
                 ),
                 SizedBox(width: 10),
-                Text('Contact Support'),
+                Text(AppLocalizations.of(context)!.contactSupport),
               ],
             ),
-            content: const Text(
-              'Please reach out to our support team:\n\n info@suqyarahiq.com',
+            content: Text(
+              AppLocalizations.of(context)!.contactSupportMessage,
               style: TextStyle(fontSize: 14, height: 1.6),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
             ],
           ),
@@ -596,7 +615,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
         const SizedBox(height: 6),
         // Active badge
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
             color: (p.isActive ?? false)
                 ? Colors.green.withValues(alpha: 0.1)
@@ -618,7 +637,9 @@ class _MyAccountPageState extends State<MyAccountPage> {
               ),
               const SizedBox(width: 6),
               Text(
-                (p.isActive ?? false) ? 'Active Driver' : 'Inactive',
+                (p.isActive ?? false)
+                    ? AppLocalizations.of(context)!.active
+                    : AppLocalizations.of(context)!.inactive,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -725,12 +746,17 @@ class _MyAccountPageState extends State<MyAccountPage> {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  field.value,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: field.valueColor ?? Colors.black87,
+                Container(
+                  width: double.infinity,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    field.value,
+                    textDirection: field.forceLtr ? TextDirection.ltr : null,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: field.valueColor ?? Colors.black87,
+                    ),
                   ),
                 ),
               ],
@@ -767,12 +793,12 @@ class _MyAccountPageState extends State<MyAccountPage> {
                     ),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'My Account',
+                        AppLocalizations.of(context)!.myAccount,
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -781,7 +807,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Your personal information',
+                        AppLocalizations.of(context)!.yourPersonalInformation,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
@@ -848,7 +874,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
                               vertical: 14,
                             ),
                           ),
-                          child: const Text('Try Again'),
+                          child: Text(AppLocalizations.of(context)!.tryAgain),
                         ),
                       ],
                     ),
@@ -874,21 +900,8 @@ class _MyAccountPageState extends State<MyAccountPage> {
   }
 
   String _formatDate(DateTime dt) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    final locale = Localizations.localeOf(context).languageCode;
+    return DateFormat.yMMMd(locale).format(dt);
   }
 }
 
@@ -897,11 +910,13 @@ class _FieldData {
   final String value;
   final IconData icon;
   final Color? valueColor;
+  final bool forceLtr;
 
   _FieldData({
     required this.label,
     required this.value,
     required this.icon,
     this.valueColor,
+    this.forceLtr = false,
   });
 }

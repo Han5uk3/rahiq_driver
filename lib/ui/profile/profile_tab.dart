@@ -5,6 +5,7 @@ import 'package:rahiq_driver/data/storage/auth_storage.dart';
 import 'package:rahiq_driver/l10n/app_localizations.dart';
 import 'package:rahiq_driver/ui/auth/login_page.dart';
 import 'package:rahiq_driver/ui/profile/my_account_page.dart';
+import 'package:rahiq_driver/ui/profile/app_settings_page.dart';
 import 'package:rahiq_driver/utils/colors.dart';
 
 class ProfileTab extends StatefulWidget {
@@ -214,25 +215,37 @@ class _ProfileTabState extends State<ProfileTab> {
                           const SizedBox(height: 24),
 
                           // ── Account Section ───────────────────────────────
-                          _buildSection(l10n.accountSection, [
-                            _buildMenuTile(
-                              icon: Icons.person_outline_rounded,
-                              title: l10n.myAccount,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const MyAccountPage(),
-                                  ),
-                                );
-                              },
-                            ),
-                            _buildMenuTile(
-                              icon: Icons.shield_outlined,
-                              title: l10n.termsConditions,
-                              onTap: _showTermsAndConditions,
-                            ),
-                          ]),
+                          _buildStandaloneTile(
+                            icon: Icons.person_outline_rounded,
+                            title: l10n.myAccount,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const MyAccountPage(),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStandaloneTile(
+                            icon: Icons.settings_outlined,
+                            title: l10n.appSettings,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AppSettingsPage(),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStandaloneTile(
+                            icon: Icons.shield_outlined,
+                            title: l10n.termsConditions,
+                            onTap: _showTermsAndConditions,
+                          ),
 
                           const SizedBox(height: 24),
 
@@ -276,72 +289,60 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  Widget _buildSection(String title, List<Widget> items) {
-    return Card(
-      color: Colors.white,
-      elevation: 2,
-      borderOnForeground: true,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(
-              title,
-              style: const TextStyle(color: AppColors.black, fontSize: 16),
-            ),
-          ),
-          const Divider(color: Color(0xFFEAEFF2), height: 1),
-          ListView.separated(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            itemBuilder: (context, index) => items[index],
-            separatorBuilder: (context, index) =>
-                const Divider(color: Color(0xFFEAEFF2), height: 1),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMenuTile({
+  Widget _buildStandaloneTile({
     required IconData icon,
     required String title,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(color: Color(0xFFF2F4F5)),
-                child: Icon(icon, color: AppColors.buttonBlueDark, size: 22),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                    fontWeight: FontWeight.w400,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEAEFF2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.buttonBlueDark.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: AppColors.buttonBlueDark, size: 22),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Colors.grey[600],
-                size: 14,
-              ),
-            ],
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.grey[400],
+                  size: 16,
+                ),
+              ],
+            ),
           ),
         ),
       ),
