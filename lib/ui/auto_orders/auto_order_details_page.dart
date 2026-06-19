@@ -19,6 +19,8 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
   bool _isLoading = true;
   String? _error;
   List<dynamic> _subOrders = [];
+  bool _isMultiSelectMode = false;
+  final Set<String> _selectedSubOrders = {};
 
   @override
   void initState() {
@@ -29,7 +31,10 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
 
   Future<void> _fetchDetails() async {
     try {
-      final details = await _api.getAutoOrderDetails(widget.item.id, widget.item.type);
+      final details = await _api.getAutoOrderDetails(
+        widget.item.id,
+        widget.item.type,
+      );
       setState(() {
         _subOrders = details;
         _isLoading = false;
@@ -121,7 +126,11 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                       ),
                     ),
                     child: _isLoading
-                        ? const Center(child: CircularProgressIndicator(color: AppColors.buttonBlueDark))
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.buttonBlueDark,
+                            ),
+                          )
                         : Padding(
                             padding: const EdgeInsets.fromLTRB(24, 28, 24, 100),
                             child: Column(
@@ -134,7 +143,10 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                                       color: Colors.red.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                                    child: Text(
+                                      _error!,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
                                   ),
 
                                 // ── Category card ────────────────────────────────────
@@ -142,51 +154,70 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
 
                                 const SizedBox(height: 16),
 
-                                if (_subOrders.isNotEmpty && _subOrders.first['customerDetails'] != null) ...[
+                                if (_subOrders.isNotEmpty &&
+                                    _subOrders.first['customerDetails'] !=
+                                        null) ...[
                                   _buildCustomerCard(_subOrders.first),
                                   const SizedBox(height: 16),
                                 ],
 
-                                if (_subOrders.isNotEmpty) _buildSubOrdersSection(),
+                                if (_subOrders.isNotEmpty)
+                                  _buildSubOrdersSection(),
 
                                 const Spacer(),
                                 const SizedBox(height: 24),
 
                                 // ── Submit proof button ──────────────────────────────
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => ProofSubmissionPage(
-                                            isAutoOrder: true,
-                                            orderId: widget.item.id,
-                                            subOrders: _subOrders.map<String>((e) => e['id']?.toString() ?? '').toList(),
+                                if (_isMultiSelectMode &&
+                                    _selectedSubOrders.isNotEmpty)
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => ProofSubmissionPage(
+                                              isAutoOrder: true,
+                                              orderId: widget.item.id,
+                                              subOrders: _selectedSubOrders
+                                                  .toList(),
+                                            ),
+                                          ),
+                                        ).then((_) {
+                                          setState(() {
+                                            _isMultiSelectMode = false;
+                                            _selectedSubOrders.clear();
+                                          });
+                                        });
+                                      },
+                                      icon: const Icon(
+                                        Icons.upload_file_rounded,
+                                        size: 20,
+                                      ),
+                                      label: Text(
+                                        _selectedSubOrders.length == 1 ? 'Complete order' : 'Complete selected orders',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            AppColors.buttonBlueDark,
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
                                           ),
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.upload_file_rounded, size: 20),
-                                    label: const Text(
-                                      'Submit Batch Proof',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.buttonBlueDark,
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
                                       ),
                                     ),
                                   ),
-                                ),
                               ],
                             ),
                           ),
@@ -270,7 +301,9 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.buttonBlueDark.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
@@ -323,7 +356,11 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                     color: AppColors.buttonBlueDark.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.person, color: AppColors.buttonBlueDark, size: 17),
+                  child: const Icon(
+                    Icons.person,
+                    color: AppColors.buttonBlueDark,
+                    size: 17,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -345,18 +382,38 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.person_outline, size: 16, color: Colors.grey),
+                    const Icon(
+                      Icons.person_outline,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     const SizedBox(width: 12),
-                    Text('${customer['firstName'] ?? ''} ${customer['lastName'] ?? ''}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    Text(
+                      '${customer['firstName'] ?? ''} ${customer['lastName'] ?? ''}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
                 if (customer['phoneNumber'] != null) ...[
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.phone_outlined, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.phone_outlined,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 12),
-                      Text('${customer['phoneNumber']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      Text(
+                        '${customer['phoneNumber']}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -365,12 +422,19 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           address.toString(),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
@@ -401,123 +465,190 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
         ),
         ..._subOrders.map((subOrder) {
           final product = subOrder['product'] ?? {};
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Sub-order #${subOrder['subOrderNumber'] ?? subOrder['id']?.toString().substring(0, 8)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.buttonBlueDark),
+          final subId = subOrder['id']?.toString() ?? '';
+          final isSelected = _selectedSubOrders.contains(subId);
+
+          return GestureDetector(
+            onLongPress: () {
+              if (_subOrders.length > 1) {
+                setState(() {
+                  _isMultiSelectMode = true;
+                  _selectedSubOrders.add(subId);
+                });
+              }
+            },
+            onTap: () {
+              if (_isMultiSelectMode) {
+                setState(() {
+                  if (isSelected) {
+                    _selectedSubOrders.remove(subId);
+                    if (_selectedSubOrders.isEmpty) {
+                      _isMultiSelectMode = false;
+                    }
+                  } else {
+                    _selectedSubOrders.add(subId);
+                  }
+                });
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProofSubmissionPage(
+                      isAutoOrder: true,
+                      orderId: widget.item.id,
+                      subOrders: [subId],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        subOrder['status'] ?? 'ASSIGNED',
-                        style: const TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                if (subOrder['deliveryNotes'] != null && subOrder['deliveryNotes'].toString().isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
+                  ),
+                );
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: isSelected
+                    ? Border.all(color: AppColors.buttonBlueDark, width: 2)
+                    : Border.all(color: Colors.transparent, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.note_alt_outlined, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Notes: ${subOrder['deliveryNotes']}',
-                            style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Colors.black87),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (subOrder['assignedDate'] != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
                         Text(
-                          'Assigned: ${_formatDate(subOrder['assignedDate'])}',
-                          style: const TextStyle(fontSize: 13, color: Colors.black54),
+                          'Sub-order #${subOrder['subOrderNumber'] ?? subOrder['id']?.toString().substring(0, 8)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.buttonBlueDark,
+                          ),
+                        ),
+
+                        const Divider(),
+                        if (subOrder['deliveryNotes'] != null &&
+                            subOrder['deliveryNotes'].toString().isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.note_alt_outlined,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Notes: ${subOrder['deliveryNotes']}',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (subOrder['assignedDate'] != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Assigned: ${_formatDate(subOrder['assignedDate'])}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Row(
+                          children: [
+                            if (product['image'] != null &&
+                                product['image'].toString().isNotEmpty)
+                              Container(
+                                width: 40,
+                                height: 40,
+                                margin: const EdgeInsets.only(right: 12),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Colors.grey.withValues(alpha: 0.1),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: Image.network(
+                                  product['image'],
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                        Icons.inventory_2_outlined,
+                                        color: Colors.grey,
+                                      ),
+                                ),
+                              )
+                            else
+                              Container(
+                                width: 40,
+                                height: 40,
+                                margin: const EdgeInsets.only(right: 12),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Colors.grey.withValues(alpha: 0.1),
+                                ),
+                                child: const Icon(
+                                  Icons.inventory_2_outlined,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product['name'] ?? 'Product',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Qty: ${subOrder['quantity'] ?? 1}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.buttonBlueDark,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                Row(
-                  children: [
-                    if (product['image'] != null && product['image'].toString().isNotEmpty)
-                      Container(
-                        width: 40,
-                        height: 40,
-                        margin: const EdgeInsets.only(right: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.grey.withValues(alpha: 0.1),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Image.network(
-                          product['image'],
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.inventory_2_outlined, color: Colors.grey),
-                        ),
-                      )
-                    else
-                      Container(
-                        width: 40,
-                        height: 40,
-                        margin: const EdgeInsets.only(right: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.grey.withValues(alpha: 0.1),
-                        ),
-                        child: const Icon(Icons.inventory_2_outlined, color: Colors.grey),
-                      ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product['name'] ?? 'Product',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Qty: ${subOrder['quantity'] ?? 1}',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.buttonBlueDark),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           );
         }),
@@ -531,7 +662,9 @@ class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
       final dt = DateTime.parse(dateStr.toString()).toLocal();
       return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) {
-      return dateStr.toString().length > 10 ? dateStr.toString().substring(0, 10) : dateStr.toString();
+      return dateStr.toString().length > 10
+          ? dateStr.toString().substring(0, 10)
+          : dateStr.toString();
     }
   }
 }

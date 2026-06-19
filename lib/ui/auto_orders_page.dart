@@ -104,22 +104,7 @@ class _AutoOrdersPageState extends State<AutoOrdersPage>
                     ),
                   ),
                 ),
-                TabBar(
-                  controller: _tabController,
-                  indicatorColor: Colors.white,
-                  indicatorWeight: 3,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white54,
-                  labelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
-                ),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -137,21 +122,60 @@ class _AutoOrdersPageState extends State<AutoOrdersPage>
                     topRight: Radius.circular(30),
                   ),
                 ),
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.buttonBlueDark,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Container(
+                        height: 55,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                      )
-                    : _error != null
-                        ? _buildErrorState()
-                        : TabBarView(
-                            controller: _tabController,
-                            children: List.generate(
-                              _tabs.length,
-                              (i) => _buildTabContent(i),
-                            ),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          dividerColor: Colors.transparent,
+                          indicator: BoxDecoration(
+                            color: AppColors.buttonBlueDark,
+                            borderRadius: BorderRadius.circular(25),
                           ),
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.grey[600],
+                          labelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.buttonBlueDark,
+                              ),
+                            )
+                          : _error != null
+                              ? _buildErrorState()
+                              : TabBarView(
+                                  controller: _tabController,
+                                  children: List.generate(
+                                    _tabs.length,
+                                    (i) => _buildTabContent(i),
+                                  ),
+                                ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

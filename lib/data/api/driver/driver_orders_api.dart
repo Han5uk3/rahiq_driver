@@ -97,9 +97,26 @@ class DriverOrdersApi {
     }
   }
 
-  Future<void> confirmSubOrder(String subOrderId) async {
+  Future<void> confirmSubOrder({
+    required String subOrderId,
+    required String mosqueFrontImagePath,
+    required String mosqueInsideImagePath,
+    required String packagesImagePath,
+    required String proofVideoPath,
+  }) async {
     try {
-      final response = await _apiClient.dio.patch('/driver/orders/sub-orders/$subOrderId/confirm');
+      FormData formData = FormData.fromMap({
+        'mosqueFrontImage': await MultipartFile.fromFile(mosqueFrontImagePath),
+        'mosqueInsideImage': await MultipartFile.fromFile(mosqueInsideImagePath),
+        'packagesImage': await MultipartFile.fromFile(packagesImagePath),
+        'deliveryVideo': await MultipartFile.fromFile(proofVideoPath),
+      });
+
+      final response = await _apiClient.dio.post(
+        '/driver/orders/sub-orders/$subOrderId/confirm',
+        data: formData,
+      );
+
       if (response.statusCode != 200 || response.data['success'] != true) {
         throw ApiException(response.data['message'] ?? 'Failed to confirm sub order', statusCode: response.statusCode);
       }

@@ -21,6 +21,7 @@ class ProofSubmissionProvider extends ChangeNotifier {
   
   bool _useSameImages = false;
   bool get useSameImages => _useSameImages;
+  bool get isMultiSelect => subOrderIds.length > 1;
 
   bool _isSubmitting = false;
   bool get isSubmitting => _isSubmitting;
@@ -43,8 +44,7 @@ class ProofSubmissionProvider extends ChangeNotifier {
     required this.isAutoOrder,
     required this.subOrderIds,
   }) {
-    // If it's an auto order, default to use same images based on requirement
-    if (isAutoOrder) {
+    if (isAutoOrder || isMultiSelect) {
       _useSameImages = true;
     }
     _proofs = subOrderIds.map((id) => SubOrderProof(id)).toList();
@@ -88,20 +88,26 @@ class ProofSubmissionProvider extends ChangeNotifier {
     }
   }
 
+  bool get canSubmit {
+    if (isMultiSelect || _useSameImages) {
+      if (_globalMosqueFrontImage == null || _globalMosqueInsideImage == null || _globalPackagesImage == null) return false;
+      return _proofs.every((p) => p.proofVideo != null);
+    } else {
+      if (_proofs.isEmpty) return false;
+      final p = _proofs.first;
+      return p.mosqueFrontImage != null && p.mosqueInsideImage != null && p.packagesImage != null && p.proofVideo != null;
+    }
+  }
+
   Future<bool> submitProofs() async {
     _isSubmitting = true;
     notifyListeners();
 
     try {
-      if (_useSameImages) {
-        // Upload 1 request per sub-order with the global images and individual video
+      if (isMultiSelect || _useSameImages) {
+        if (!canSubmit) throw Exception('Please provide all required media.');
+        
         for (var proof in _proofs) {
-          if (_globalMosqueFrontImage == null || _globalMosqueInsideImage == null || _globalPackagesImage == null) {
-            throw Exception('Please select all global images for the batch.');
-          }
-          if (proof.proofVideo == null) {
-            throw Exception('Please select a video for suborder ${proof.subOrderId}.');
-          }
           await _api.bulkUploadProof(
             orderId: orderId,
             subOrderIds: proof.subOrderId,
@@ -112,23 +118,16 @@ class ProofSubmissionProvider extends ChangeNotifier {
           );
         }
       } else {
-        // Upload 1 request per sub-order with individual images and video
-        for (var proof in _proofs) {
-          if (proof.mosqueFrontImage == null || proof.mosqueInsideImage == null || proof.packagesImage == null) {
-            throw Exception('Please select all 3 images for suborder ${proof.subOrderId}.');
-          }
-          if (proof.proofVideo == null) {
-            throw Exception('Please select a video for suborder ${proof.subOrderId}.');
-          }
-          await _api.bulkUploadProof(
-            orderId: orderId,
-            subOrderIds: proof.subOrderId,
-            mosqueFrontImagePath: proof.mosqueFrontImage!,
-            mosqueInsideImagePath: proof.mosqueInsideImage!,
-            packagesImagePath: proof.packagesImage!,
-            proofVideoPath: proof.proofVideo,
-          );
-        }
+        // Single submission
+        if (!canSubmit) throw Exception('Please provide all required media.');
+        final p = _proofs.first;
+        await _api.confirmSubOrder(
+          subOrderId: p.subOrderId,
+          mosqueFrontImagePath: p.mosqueFrontImage!,
+          mosqueInsideImagePath: p.mosqueInsideImage!,
+          packagesImagePath: p.packagesImage!,
+          proofVideoPath: p.proofVideo!,
+        );
       }
       _isSubmitting = false;
       notifyListeners();

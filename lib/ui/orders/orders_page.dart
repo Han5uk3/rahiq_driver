@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:rahiq_driver/data/api/api_client.dart';
 import 'package:rahiq_driver/data/api/driver/driver_orders_api.dart';
 import 'package:rahiq_driver/ui/orders/order_details_page.dart';
@@ -14,6 +16,7 @@ class OrderListItem {
   final DateTime? createdAt;
   final bool isAuto;
   final dynamic originalModel;
+  final String? imageUrl;
 
   OrderListItem({
     required this.id,
@@ -24,6 +27,7 @@ class OrderListItem {
     this.createdAt,
     required this.isAuto,
     required this.originalModel,
+    this.imageUrl,
   });
 }
 
@@ -43,11 +47,9 @@ class _OrdersPageState extends State<OrdersPage>
   bool _isLoading = true;
   String? _error;
 
-  // Tab definitions: label → status values that belong to it
   static const _tabs = [
-    _TabDef('Assigned', ['ASSIGNED', 'PENDING', 'IN_TRANSIT', 'ACCEPTED']),
-    _TabDef('Delivered', ['DELIVERED', 'COMPLETED']),
-    _TabDef('Cancelled', ['CANCELLED', 'REJECTED']),
+    _TabDef('Normal orders', []),
+    _TabDef('Auto orders', []),
   ];
 
   @override
@@ -86,6 +88,7 @@ class _OrdersPageState extends State<OrdersPage>
             createdAt: order.createdAt,
             isAuto: false,
             originalModel: order,
+            imageUrl: null,
           ),
         );
       }
@@ -102,6 +105,7 @@ class _OrdersPageState extends State<OrdersPage>
             createdAt: null, // Auto orders don't have createdAt
             isAuto: true,
             originalModel: auto,
+            imageUrl: auto.image,
           ),
         );
       }
@@ -126,10 +130,11 @@ class _OrdersPageState extends State<OrdersPage>
   }
 
   List<OrderListItem> _ordersForTab(int tabIndex) {
-    final statuses = _tabs[tabIndex].statuses;
-    return _allOrders
-        .where((o) => statuses.contains(o.status.toUpperCase()))
-        .toList();
+    if (tabIndex == 0) {
+      return _allOrders.where((o) => !o.isAuto).toList();
+    } else {
+      return _allOrders.where((o) => o.isAuto).toList();
+    }
   }
 
   @override
@@ -171,23 +176,7 @@ class _OrdersPageState extends State<OrdersPage>
                     ),
                   ),
                 ),
-                // ── Tab bar inside header ─────────────────────────────────
-                TabBar(
-                  controller: _tabController,
-                  indicatorColor: Colors.white,
-                  indicatorWeight: 3,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white54,
-                  labelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
-                ),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -205,21 +194,60 @@ class _OrdersPageState extends State<OrdersPage>
                     topRight: Radius.circular(30),
                   ),
                 ),
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.buttonBlueDark,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Container(
+                        height: 55,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                      )
-                    : _error != null
-                    ? _buildErrorState()
-                    : TabBarView(
-                        controller: _tabController,
-                        children: List.generate(
-                          _tabs.length,
-                          (i) => _buildTabContent(i),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          dividerColor: Colors.transparent,
+                          indicator: BoxDecoration(
+                            color: AppColors.buttonBlueDark,
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.grey[600],
+                          labelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.buttonBlueDark,
+                              ),
+                            )
+                          : _error != null
+                          ? _buildErrorState()
+                          : TabBarView(
+                              controller: _tabController,
+                              children: List.generate(
+                                _tabs.length,
+                                (i) => _buildTabContent(i),
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -236,7 +264,7 @@ class _OrdersPageState extends State<OrdersPage>
       onRefresh: _fetchOrders,
       color: AppColors.buttonBlueDark,
       child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 150),
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 150),
         itemCount: orders.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) => _buildOrderCard(orders[index]),
@@ -250,7 +278,7 @@ class _OrdersPageState extends State<OrdersPage>
     return Material(
       color: Colors.white,
       elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.06),
+
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -275,18 +303,58 @@ class _OrdersPageState extends State<OrdersPage>
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.buttonBlueDark.withValues(alpha: 0.08),
+              if (order.imageUrl != null)
+                ClipRRect(
                   borderRadius: BorderRadius.circular(12),
+                  child: CachedNetworkImage(
+                    imageUrl: order.imageUrl!,
+                    width: 64,
+                    height: 64,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        color: Colors.white,
+                      ),
+                    ),
+                    errorWidget: (context, url, error) {
+                      return Container(
+                        width: 64,
+                        height: 64,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.buttonBlueDark.withValues(
+                            alpha: 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.local_shipping_rounded,
+                          color: AppColors.buttonBlueDark,
+                          size: 32,
+                        ),
+                      );
+                    },
+                  ),
+                )
+              else
+                Container(
+                  width: 64,
+                  height: 64,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.buttonBlueDark.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.local_shipping_rounded,
+                    color: AppColors.buttonBlueDark,
+                    size: 32,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.local_shipping_rounded,
-                  color: AppColors.buttonBlueDark,
-                  size: 24,
-                ),
-              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(

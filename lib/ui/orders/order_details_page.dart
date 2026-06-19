@@ -19,6 +19,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   bool _isLoading = true;
   String? _error;
   List<String> _subOrders = [];
+  bool _isMultiSelectMode = false;
+  final Set<String> _selectedSubOrders = {};
 
   @override
   void initState() {
@@ -65,33 +67,40 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   const SizedBox(height: 16),
                   if (_subOrders.isNotEmpty) _buildSubOrdersSection(),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProofSubmissionPage(
-                              isAutoOrder: false,
-                              orderId: widget.order.id,
-                              subOrders: _subOrders,
+                  if (_isMultiSelectMode && _selectedSubOrders.isNotEmpty)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProofSubmissionPage(
+                                isAutoOrder: false,
+                                orderId: widget.order.id,
+                                subOrders: _selectedSubOrders.toList(),
+                              ),
                             ),
+                          ).then((_) {
+                            // Clear multiselect state when returning
+                            setState(() {
+                              _isMultiSelectMode = false;
+                              _selectedSubOrders.clear();
+                            });
+                          });
+                        },
+                        icon: const Icon(Icons.upload_file),
+                        label: Text(_selectedSubOrders.length == 1 ? 'Complete order' : 'Complete selected orders'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.buttonBlue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        );
-                      },
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Submit Delivery Proof'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.buttonBlue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -140,21 +149,82 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Sub Orders',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.buttonBlue),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Sub Orders',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.buttonBlue),
+                ),
+                if (_isMultiSelectMode)
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _isMultiSelectMode = false;
+                        _selectedSubOrders.clear();
+                      });
+                    },
+                    child: const Text('Cancel'),
+                  ),
+              ],
             ),
             const Divider(),
-            ..._subOrders.map((subId) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+            ..._subOrders.map((subId) {
+              final isSelected = _selectedSubOrders.contains(subId);
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onLongPress: () {
+                  if (_subOrders.length > 1) {
+                    setState(() {
+                      _isMultiSelectMode = true;
+                      _selectedSubOrders.add(subId);
+                    });
+                  }
+                },
+                onTap: () {
+                  if (_isMultiSelectMode) {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedSubOrders.remove(subId);
+                        if (_selectedSubOrders.isEmpty) {
+                          _isMultiSelectMode = false;
+                        }
+                      } else {
+                        _selectedSubOrders.add(subId);
+                      }
+                    });
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProofSubmissionPage(
+                          isAutoOrder: false,
+                          orderId: widget.order.id,
+                          subOrders: [subId],
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                    border: isSelected ? Border.all(color: AppColors.buttonBlue, width: 2) : Border.all(color: Colors.transparent, width: 2),
+                  ),
                   child: Row(
                     children: [
                       const Icon(Icons.inventory, size: 20, color: Colors.grey),
                       const SizedBox(width: 8),
-                      Text(subId, style: const TextStyle(fontSize: 16)),
+                      Expanded(child: Text(subId, style: const TextStyle(fontSize: 16))),
+                      if (!_isMultiSelectMode)
+                        const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
                     ],
                   ),
-                )),
+                ),
+              );
+            }),
           ],
         ),
       ),

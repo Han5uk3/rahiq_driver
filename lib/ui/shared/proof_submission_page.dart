@@ -49,23 +49,7 @@ class ProofSubmissionPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (isAutoOrder && subOrders.length > 1) ...[
-                    Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: CheckboxListTile(
-                        title: const Text(
-                          'Use same images for all sub-orders',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: const Text('Video must still be selected individually'),
-                        value: provider.useSameImages,
-                        onChanged: provider.toggleUseSameImages,
-                        activeColor: AppColors.buttonBlue,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                  // Removed the CheckboxListTile since multiselect now forces global images
 
                   if (provider.useSameImages) ...[
                     _buildSectionTitle('Global Images (Applies to all)'),
@@ -83,29 +67,35 @@ class ProofSubmissionPage extends StatelessWidget {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        try {
-                          await provider.submitProofs();
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Proofs uploaded successfully!')),
-                            );
-                            Navigator.pop(context);
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-                            );
-                          }
-                        }
-                      },
+                      onPressed: provider.canSubmit
+                          ? () async {
+                              try {
+                                await provider.submitProofs();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Proofs uploaded successfully!')),
+                                  );
+                                  Navigator.pop(context);
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                                  );
+                                }
+                              }
+                            }
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.buttonBlue,
+                        disabledBackgroundColor: Colors.grey,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Submit Proofs', style: TextStyle(fontSize: 16)),
+                      child: Text(
+                        provider.isMultiSelect ? 'Complete orders' : 'Complete order',
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ),
                   ),
                 ],
