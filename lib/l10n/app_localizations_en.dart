@@ -25,4 +25,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications => 'Notifications';
+
+  @override
+  String get logout => 'Logout';
+
+  @override
+  String get logoutConfirmation => 'Are you sure you want to logout?';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get myAccount => 'My Account';
+
+  @override
+  String get termsConditions => 'Terms & Conditions';
+
+  @override
+  String get accountSection => 'Account';
+
+  @override
+  String get manageAccountSettings => 'Manage account settings';
 }

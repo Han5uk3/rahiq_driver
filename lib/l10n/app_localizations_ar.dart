@@ -25,4 +25,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notifications => 'الإشعارات';
+
+  @override
+  String get logout => 'تسجيل الخروج';
+
+  @override
+  String get logoutConfirmation => 'هل أنت متأكد أنك تريد تسجيل الخروج؟';
+
+  @override
+  String get cancel => 'إلغاء';
+
+  @override
+  String get myAccount => 'حسابي';
+
+  @override
+  String get termsConditions => 'الشروط والأحكام';
+
+  @override
+  String get accountSection => 'الحساب';
+
+  @override
+  String get manageAccountSettings => 'إدارة إعدادات الحساب';
 }

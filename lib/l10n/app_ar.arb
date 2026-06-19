@@ -5,5 +5,12 @@
   "phoneNumber": "رقم الهاتف",
   "password": "كلمة المرور",
   "profile": "الملف الشخصي",
-  "notifications": "الإشعارات"
+  "notifications": "الإشعارات",
+  "logout": "تسجيل الخروج",
+  "logoutConfirmation": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+  "cancel": "إلغاء",
+  "myAccount": "حسابي",
+  "termsConditions": "الشروط والأحكام",
+  "accountSection": "الحساب",
+  "manageAccountSettings": "إدارة إعدادات الحساب"
 }

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:rahiq_driver/data/storage/auth_storage.dart';
-import 'package:rahiq_driver/utils/colors.dart';
+import 'package:rahiq_driver/ui/splash_page.dart';
+import 'package:rahiq_driver/l10n/app_localizations.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -25,6 +26,14 @@ void main() async {
   runApp(const MyApp());
 }
 
+class MyScrollBehavior extends MaterialScrollBehavior {
+  const MyScrollBehavior();
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const ClampingScrollPhysics();
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -33,12 +42,17 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Rahiq Driver',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const MyScrollBehavior(),
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.buttonBlue),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+        ),
         useMaterial3: true,
       ),
       localizationsDelegates: const [
-        // AppLocalizations.delegate, // Add when generated
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -47,7 +61,7 @@ class MyApp extends StatelessWidget {
         Locale('en'),
         Locale('ar'),
       ],
-      home: const Scaffold(body: Center(child: Text('Rahiq Driver Initialization'))), // placeholder
+      home: const SplashPage(),
     );
   }
 }

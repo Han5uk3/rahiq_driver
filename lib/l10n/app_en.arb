@@ -5,5 +5,12 @@
   "phoneNumber": "Phone Number",
   "password": "Password",
   "profile": "Profile",
-  "notifications": "Notifications"
+  "notifications": "Notifications",
+  "logout": "Logout",
+  "logoutConfirmation": "Are you sure you want to logout?",
+  "cancel": "Cancel",
+  "myAccount": "My Account",
+  "termsConditions": "Terms & Conditions",
+  "accountSection": "Account",
+  "manageAccountSettings": "Manage account settings"
 }

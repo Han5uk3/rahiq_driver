@@ -1,0 +1,537 @@
+import 'package:flutter/material.dart';
+import 'package:rahiq_driver/data/api/api_client.dart';
+import 'package:rahiq_driver/data/api/driver/driver_orders_api.dart';
+import 'package:rahiq_driver/data/models/driver/auto_order_item.dart';
+import 'package:rahiq_driver/ui/shared/proof_submission_page.dart';
+import 'package:rahiq_driver/utils/colors.dart';
+
+class AutoOrderDetailsPage extends StatefulWidget {
+  final AutoOrderItem item;
+
+  const AutoOrderDetailsPage({super.key, required this.item});
+
+  @override
+  State<AutoOrderDetailsPage> createState() => _AutoOrderDetailsPageState();
+}
+
+class _AutoOrderDetailsPageState extends State<AutoOrderDetailsPage> {
+  late DriverOrdersApi _api;
+  bool _isLoading = true;
+  String? _error;
+  List<dynamic> _subOrders = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _api = DriverOrdersApi(ApiClient());
+    _fetchDetails();
+  }
+
+  Future<void> _fetchDetails() async {
+    try {
+      final details = await _api.getAutoOrderDetails(widget.item.id, widget.item.type);
+      setState(() {
+        _subOrders = details;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.buttonBlueDark,
+      body: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height,
+          ),
+          child: IntrinsicHeight(
+            child: Column(
+              children: [
+                // ── Header ────────────────────────────────────────────────────
+                Container(
+                  width: double.infinity,
+                  color: AppColors.buttonBlueDark,
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 60, 16, 20),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.item.name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            if (widget.item.nameAr.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.item.nameAr,
+                                textDirection: TextDirection.rtl,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 38),
+                    ],
+                  ),
+                ),
+
+                // ── Rounded white body ─────────────────────────────────────────
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF5F7FA),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator(color: AppColors.buttonBlueDark))
+                        : Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 28, 24, 100),
+                            child: Column(
+                              children: [
+                                if (_error != null)
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                                  ),
+
+                                // ── Category card ────────────────────────────────────
+                                _buildCategoryCard(),
+
+                                const SizedBox(height: 16),
+
+                                if (_subOrders.isNotEmpty && _subOrders.first['customerDetails'] != null) ...[
+                                  _buildCustomerCard(_subOrders.first),
+                                  const SizedBox(height: 16),
+                                ],
+
+                                if (_subOrders.isNotEmpty) _buildSubOrdersSection(),
+
+                                const Spacer(),
+                                const SizedBox(height: 24),
+
+                                // ── Submit proof button ──────────────────────────────
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ProofSubmissionPage(
+                                            isAutoOrder: true,
+                                            orderId: widget.item.id,
+                                            subOrders: _subOrders.map<String>((e) => e['id']?.toString() ?? '').toList(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.upload_file_rounded, size: 20),
+                                    label: const Text(
+                                      'Submit Batch Proof',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.buttonBlueDark,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            // Category image
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: AppColors.buttonBlueDark.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: widget.item.image != null
+                  ? Image.network(
+                      widget.item.image!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.mosque_rounded,
+                        color: AppColors.buttonBlueDark,
+                        size: 32,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.mosque_rounded,
+                      color: AppColors.buttonBlueDark,
+                      size: 32,
+                    ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.item.name,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  if (widget.item.nameAr.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.item.nameAr,
+                      textDirection: TextDirection.rtl,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black45,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.buttonBlueDark.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_subOrders.length} Sub-Orders',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.buttonBlueDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomerCard(dynamic firstSubOrder) {
+    final customer = firstSubOrder['customerDetails'] ?? {};
+    final address = firstSubOrder['deliveryAddress'] ?? customer['address'];
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.buttonBlueDark.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.person, color: AppColors.buttonBlueDark, size: 17),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Customer Details',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: Color(0xFFEEF1F4)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.person_outline, size: 16, color: Colors.grey),
+                    const SizedBox(width: 12),
+                    Text('${customer['firstName'] ?? ''} ${customer['lastName'] ?? ''}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+                if (customer['phoneNumber'] != null) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone_outlined, size: 16, color: Colors.grey),
+                      const SizedBox(width: 12),
+                      Text('${customer['phoneNumber']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ],
+                if (address != null && address.toString().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          address.toString(),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubOrdersSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 8, bottom: 12),
+          child: Text(
+            'Batch Deliveries',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        ..._subOrders.map((subOrder) {
+          final product = subOrder['product'] ?? {};
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Sub-order #${subOrder['subOrderNumber'] ?? subOrder['id']?.toString().substring(0, 8)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.buttonBlueDark),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        subOrder['status'] ?? 'ASSIGNED',
+                        style: const TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                if (subOrder['deliveryNotes'] != null && subOrder['deliveryNotes'].toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.note_alt_outlined, size: 16, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Notes: ${subOrder['deliveryNotes']}',
+                            style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Colors.black87),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (subOrder['assignedDate'] != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Assigned: ${_formatDate(subOrder['assignedDate'])}',
+                          style: const TextStyle(fontSize: 13, color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                Row(
+                  children: [
+                    if (product['image'] != null && product['image'].toString().isNotEmpty)
+                      Container(
+                        width: 40,
+                        height: 40,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.grey.withValues(alpha: 0.1),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Image.network(
+                          product['image'],
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.inventory_2_outlined, color: Colors.grey),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 40,
+                        height: 40,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.grey.withValues(alpha: 0.1),
+                        ),
+                        child: const Icon(Icons.inventory_2_outlined, color: Colors.grey),
+                      ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product['name'] ?? 'Product',
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Qty: ${subOrder['quantity'] ?? 1}',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.buttonBlueDark),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  String _formatDate(dynamic dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final dt = DateTime.parse(dateStr.toString()).toLocal();
+      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return dateStr.toString().length > 10 ? dateStr.toString().substring(0, 10) : dateStr.toString();
+    }
+  }
+}
