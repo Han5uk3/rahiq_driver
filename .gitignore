@@ -11,6 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+assets/hoppscotch-team-collections-openapi.json
 
 # IntelliJ related
 *.iml
